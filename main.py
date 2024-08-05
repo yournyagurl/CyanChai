@@ -134,7 +134,7 @@ async def myxp(ctx, member: discord.Member = None):
     await ctx.send(embed=embed)
 
 # add xp 
-@bot.command(name='addxp')
+@bot.command(name='addXp')
 async def addxp(ctx, xp: int = None, member: discord.Member = None):
     """Add xp to member"""
     if not ctx.message.author.guild_permissions.administrator:
@@ -207,7 +207,7 @@ async def reset_xp_for_member(ctx, member):
 
 
 # Remove XP
-@bot.command(name='RemoveXp')
+@bot.command(name='removeXp')
 async def remove_xp_command(ctx, xp: int, member: discord.Member):
         """Remove Xp"""
         if ctx.message.author.guild_permissions.administrator:
@@ -291,7 +291,7 @@ async def wallet(ctx, member: discord.Member = None):
     await ctx.send(embed=embed)
 
 # add cash command
-@bot.command(name='addcash')
+@bot.command(name='addCash')
 @is_admin()
 async def addcash(ctx, amount: int = None, member: discord.Member = None):
     """Add Cash (for debugging)"""
@@ -316,7 +316,7 @@ async def addcash(ctx, amount: int = None, member: discord.Member = None):
     await ctx.send(f"Added {amount}:four_leaf_clover: to {member.display_name}'s account.")
 
 # remove cash command
-@bot.command(name="removecash")
+@bot.command(name="removeCash")
 @is_admin()
 async def removecash(ctx, amount:int = None, member: discord.Member = None) :
     """Remove cash from one member"""
@@ -1284,7 +1284,7 @@ async def xp_for_chat():
 
     if minute_key in text_chat_users:
         for user_id in text_chat_users[minute_key]:
-            xp_to_add_chat = random.randint(1, 5)
+            xp_to_add_chat = 5
             add_xp(user_id, xp_to_add_chat)
             logging.info(f"Added {xp_to_add_chat} XP to user {user_id} for being active at {minute_key}")
         del text_chat_users[minute_key]
@@ -1336,7 +1336,7 @@ async def award_xp():
     for channel, members in voice_channel_users.items():
         for member, join_time in members.items():
             duration = current_time - join_time
-            xp_gained = random.randint(5, 10)
+            xp_gained = 10
             add_xp(member.id, xp_gained)
             print(f'{member} earned {xp_gained} XP for being in {channel}')
 
@@ -1351,6 +1351,73 @@ async def stats(ctx, member: discord.Member):
             await ctx.send(f'{member.name} has been in {channel} for {duration.total_seconds()} seconds and has {xp} XP.')
             return
     await ctx.send(f'{member.name} is not currently in a voice channel and has {xp} XP.')
+
+
+async def paginate(ctx, embeds):
+    current_page = 0
+
+    message = await ctx.send(embed=embeds[current_page])
+
+    await message.add_reaction('⬅️')
+    await message.add_reaction('➡️')
+
+    def check(reaction, user):
+        return user == ctx.author and str(reaction.emoji) in ['⬅️', '➡️']
+
+    while True:
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+
+            if str(reaction.emoji) == '➡️' and current_page != len(embeds) - 1:
+                current_page += 1
+                await message.edit(embed=embeds[current_page])
+            elif str(reaction.emoji) == '⬅️' and current_page > 0:
+                current_page -= 1
+                await message.edit(embed=embeds[current_page])
+
+            await message.remove_reaction(reaction, user)
+
+        except Exception as e:
+            break
+
+@bot.command(name="info")
+async def info(ctx):
+    embeds = []
+
+    embed1 = discord.Embed(title="Basic Commands", color=custom_color)
+    embed1.add_field(name="Ping", value="Print bot latency", inline=False)
+    embed1.add_field(name="Who", value="Print member info", inline=False)
+    embeds.append(embed1)
+
+    embed2 = discord.Embed(title="XP Commands", color=custom_color)
+    embed2.add_field(name="myxp", value="Displays your current XP", inline=False)
+    embed2.add_field(name=";addXp (number) @(member)", value="Add Xp to a member", inline=False)
+    embed2.add_field(name=";removeXp (number) @(member)", value="Remove XP from member", inline=False)
+    embed2.add_field(name=";ResetXp (@everyone/ @role/ @pmember)", value="Reset user XP to 0", inline=False)
+    embed2.add_field(name=";leaderboard-xp", value="Show XP leaderboard", inline=False)
+    embeds.append(embed2)
+
+    embed3 = discord.Embed(title="Cash Commands", color=custom_color)
+    embed3.add_field(name=";bal", value="Display Cash and Bank Balance", inline=False)
+    embed3.add_field(name=";addCash (number) @(member)", value="Add Cash to a member", inline=False)
+    embed3.add_field(name=";removeCash (number) @(member)", value="Remove Cash from member", inline=False)
+    embed3.add_field(name=";tax (number) @(member)", value="Tax a member", inline=False)
+    embed3.add_field(name=";deposit (amount)", value="Deposit Cash", inline=False)
+    embed3.add_field(name=";withdraw (amount)", value="Withdraw Cash", inline=False)
+    embed3.add_field(name=";collect", value="Collect income", inline=False)
+    embed3.add_field(name=";leaderboard-cash", value="Show Cash leaderboard", inline=False)
+    embeds.append(embed3)
+
+    embed4 =discord.Embed(title="Gambling and Shop", color=custom_color)
+    embed4.add_field(name=";inv", value="display member inventory", inline=False)
+    embed4.add_field(name=";buy (item name)", value="buy a shop item", inline=False)
+    embed4.add_field(name=";use (item name) @(member)", value="Use item", inline=False)
+    embed4.add_field(name=";blackjack (amount)", value="start a game of blackjack", inline=False)
+    embed4.add_field(name=";roulette (amount) (color/value)", value="start a game of roulette", inline=False)
+    embed4.add_field(name=";slots (amount)", value="start a game of slots", inline=False)
+    embeds.append(embed4)
+    await paginate(ctx, embeds)
+
 
 @bot.command()
 async def active(ctx):
