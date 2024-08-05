@@ -456,7 +456,7 @@ async def collect(ctx):
             time_left = next_claim_time - now
             hours, remainder = divmod(int(time_left.total_seconds()), 3600)
             minutes, _ = divmod(remainder, 60)
-            daily_message = f"You need to wait {hours} hours and {minutes} minutes before claiming your next daily income."
+            daily_message = f"{hours}hr {minutes}min"
     else:
         daily_message = "You do not have the required role to receive a daily income."
 
@@ -478,13 +478,15 @@ async def collect(ctx):
         else:
             next_claim_time = date_parser.parse(last_weekly_claim) + timedelta(days=7)
             time_left = next_claim_time - datetime.now()
-            hours, remainder = divmod(int(time_left.total_seconds()), 3600)
+            days, remainder = divmod(int(time_left.total_seconds()), 86400)
             minutes, _ = divmod(remainder, 60)
-            weekly_message = f"You need to wait {hours} hours and {minutes} minutes before claiming your next weekly income."
+            weekly_message = f"{days}d, {minutes}min"
     else:
         weekly_message = "You do not have the required role to receive a weekly income."
 
-    embed = discord.Embed(title="Income Status", description=f"{daily_message}\n{weekly_message}", color=discord.Color.blue())
+    embed = discord.Embed(title="Income Status", color=custom_color)
+    embed.add_field(name="Daily", value=f'**{daily_message}**', inline=True)
+    embed.add_field(name="Weekly", value=f'**{weekly_message}**', inline=True)
     embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar.url)
     await ctx.send(embed=embed)
 
